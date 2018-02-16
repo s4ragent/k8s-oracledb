@@ -43,6 +43,12 @@ spec:
         - name: u01
           mountPath: /u01/app/oracle
           readOnly: false
+        livenessProbe:
+          exec:
+            command:
+              - "ps -ef | grep pmon_XE | grep -v grep"
+          initialDelaySeconds: 120
+          periodSeconds: 5
       volumes:
       - name: u01
         persistentVolumeClaim:
