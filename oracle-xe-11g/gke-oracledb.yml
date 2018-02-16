@@ -46,7 +46,9 @@ spec:
         livenessProbe:
           exec:
             command:
-              - "ps -ef | grep pmon_XE | grep -v grep"
+              - sh
+              - -ec
+              - ps -ef | grep pmon_XE | grep -v grep
           initialDelaySeconds: 120
           periodSeconds: 5
       volumes:
