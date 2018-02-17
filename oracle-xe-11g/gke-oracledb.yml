@@ -45,14 +45,10 @@ spec:
           readOnly: false
         livenessProbe:
           exec:
-            command:
-## moniter pmon            
-#              - bash
-#              - -ec
+            command:          
+              - bash
+              - -ec
 #              - ps -ef | grep pmon_XE | grep -v grep
-#
-##select some tables
-#
               - sudo -u oracle bash -c 'export ORACLE_SID=XE;export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe;echo -e " whenever sqlerror exit 5\nwhenever oserror exit 9\nconn /as sysdba\nselect sysdate from dual;\nexit\n"|/u01/app/oracle/product/11.2.0/xe/bin/sqlplus /nolog'
           initialDelaySeconds: 120
           periodSeconds: 5
