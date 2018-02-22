@@ -1,0 +1,74 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: oracledbstorageclass
+provisioner: kubernetes.io/azure-disk
+parameters:
+  storageaccounttype: Standard_LRS
+  kind: Managed
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: oracledbclaim 
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 15Gi
+  storageClassName: oracledbstorageclass
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: oracledb
+  labels:
+    app: oracledb
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: oracledb
+    spec:
+      containers:
+      - name: oracledb
+        image: sath89/oracle-xe-11g
+        ports:
+        - containerPort: 1521
+        env:
+        - name: SOME_ENV
+          value: "envk8s"
+        volumeMounts:
+        - name: u01
+          mountPath: /u01/app/oracle
+          readOnly: false
+        livenessProbe:
+          exec:
+            command:          
+              - bash
+              - -ec
+#              - ps -ef | grep pmon_XE | grep -v grep
+              - sudo -u oracle bash -c 'export ORACLE_SID=XE;export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe;echo -e " whenever sqlerror exit 5\nwhenever oserror exit 9\nconn /as sysdba\nselect sysdate from dual;\nexit\n"|/u01/app/oracle/product/11.2.0/xe/bin/sqlplus /nolog'
+          initialDelaySeconds: 120
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+      volumes:
+      - name: u01
+        persistentVolumeClaim:
+          claimName: oracledbclaim          
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oracledb-service
+spec:
+  ports:
+  - name: oracledb
+    port: 1521
+    targetPort: 1521
+  selector:
+    name: oracledb
+  type: LoadBalancer
